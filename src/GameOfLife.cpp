@@ -5,12 +5,12 @@
 
 using namespace std;
 
-#define GRID_S	4
+#define GRID_S	8
 #define SCR_S	600
 
 std::vector<bool> grid;
 
-void createNewCell(sf::Vector2i mouse_position);
+void interactWithCell(sf::Vector2i mouse_position, sf::Event mouse_event);
 
 int main()
 {
@@ -31,10 +31,11 @@ int main()
 				case sf::Event::Closed:
 					window.close();
 					break;
-				case sf::Event::MouseButtonPressed:
-					if(event.mouseButton.button == sf::Mouse::Left)
-						createNewCell(sf::Mouse::getPosition(window));
+				case sf::Event::MouseButtonPressed: 
+					interactWithCell(sf::Mouse::getPosition(window), event);
 					break;
+				case sf::Event::MouseButtonReleased:
+
 				default:
 					break;
 			}
@@ -86,14 +87,17 @@ int main()
 	return 0;
 }
 
-void createNewCell(sf::Vector2i mouse_position)
+void interactWithCell(sf::Vector2i mouse_position, sf::Event mouse_event)
 {
 	float cell_size = SCR_S / GRID_S;
-
 	int cell_x = mouse_position.x / cell_size;
 	int cell_y = mouse_position.y / cell_size;
 	int position = (cell_x + cell_y) + (cell_x * (GRID_S - 1));
-	grid[position] = 1;
+
+	if (mouse_event.mouseButton.button == sf::Mouse::Left)
+		grid[position] = 1;
+	else if (mouse_event.mouseButton.button == sf::Mouse::Right)
+		grid[position] = 0;
 
 	cout << cell_x << " | " << cell_y << " | " << position << endl;
 }
