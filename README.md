@@ -16,3 +16,7 @@ os próximos estados são subsequentes da aplicação dessas 4 regras.
 ## Projeto
 
 Aproveitar o projeto para aprender SFML e revisitar OpenGL mais puro.
+
+Protótipo até o momento segue as regras do autômato.
+
+![image](https://i.imgur.com/42ufT06.gif)
