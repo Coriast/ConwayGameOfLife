@@ -5,63 +5,97 @@
 
 using namespace std;
 
-#define GRID_S 4
-#define SCR_WIDTH	600
-#define SCR_HEIGHT	600
+#define GRID_S	4
+#define SCR_S	600
 
-int grid[] =
-{
-	0, 0, 0, 1,
-	0, 1, 0, 0,
-	0, 1, 0, 0,
-	0, 1, 0, 0
-};
+std::vector<bool> grid;
+
+void createNewCell(sf::Vector2i mouse_position);
 
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(SCR_WIDTH, SCR_HEIGHT), "Conway", sf::Style::Titlebar | sf::Style::Close);
-	// sincronizar os updates da tela com a atualização de frames do monitor.
+	for (int i = 0; i < (GRID_S * GRID_S); i++)
+		grid.push_back(0);
+
+	sf::RenderWindow window(sf::VideoMode(SCR_S, SCR_S), "Conway", sf::Style::Titlebar | sf::Style::Close);
+	
 	window.setVerticalSyncEnabled(true);
 
 	while (window.isOpen())
 	{
-
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == sf::Event::Closed)
-				window.close();
+			switch (event.type)
+			{
+				case sf::Event::Closed:
+					window.close();
+					break;
+				case sf::Event::MouseButtonPressed:
+					if(event.mouseButton.button == sf::Mouse::Left)
+						createNewCell(sf::Mouse::getPosition(window));
+					break;
+				default:
+					break;
+			}
 		}
 
-		sf::RectangleShape square(sf::Vector2f(SCR_WIDTH / GRID_S, SCR_HEIGHT / GRID_S));
+		sf::RectangleShape square(sf::Vector2f(SCR_S / GRID_S, SCR_S / GRID_S));
 		vector<sf::RectangleShape> squares;
 
+		auto it = grid.cbegin();
+		for (int i = 0; i < GRID_S; i++)
+		{
+			for (int j = 0; j < GRID_S; j++)
+			{
+				if (*it == 1)
+					square.setFillColor(sf::Color(255, 255, 255));
+				else
+					square.setFillColor(sf::Color(0, 0, 0));
+
+				square.setPosition(sf::Vector2f((square.getSize().x * i), (square.getSize().y * j)));
+				squares.push_back(square);
+				
+				it++;
+			}
+		}
+		/*
 		for (int i = 0; i < GRID_S; i++)
 		{
 			for (int j = 0; j < GRID_S; j++)
 			{
 				int grid_position = (i + j) + (j * (GRID_S - 1));
-				square.setPosition(sf::Vector2f((square.getSize().x * i), (square.getSize().y * j)));
 				if (grid[grid_position] == 1)
 					square.setFillColor(sf::Color(255, 255, 255));
 				else
 					square.setFillColor(sf::Color(0, 0, 0));
-				squares.push_back(square);
 			}
 		}
-		
+		*/
 		window.clear(sf::Color(72, 72, 72));
-		{
 			
-			for (auto it = squares.begin(); it != squares.end(); it++)
-			{
-				window.draw(*it);
-				//cout << it->getPosition().x << " | " << it->getPosition().y << endl;
-			}
-
+		for (auto it = squares.begin(); it != squares.end(); it++)
+		{
+			window.draw(*it);
 		}
+
+
 		window.display();
 	}
 
 	return 0;
 }
+
+void createNewCell(sf::Vector2i mouse_position)
+{
+	float cell_size = SCR_S / GRID_S;
+
+	int cell_x = mouse_position.x / cell_size;
+	int cell_y = mouse_position.y / cell_size;
+	int position = (cell_x + cell_y) + (cell_x * (GRID_S - 1));
+	grid[position] = 1;
+
+	cout << cell_x << " | " << cell_y << " | " << position << endl;
+}
+
+
