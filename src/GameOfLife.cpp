@@ -1,81 +1,17 @@
-#include <iostream>
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
-#include <SFML/OpenGL.hpp>
-
-using namespace std;
-
-#define GRID_S	20
-#define SCR_S	600
-
-bool grid[GRID_S][GRID_S];
-
-void interactWithCell(sf::Vector2i mouse_position, sf::Event mouse_event);
-void applyingRules();
+#include "Game.h"
 
 int main()
 {
-	for (auto& v : grid)
-		for (auto& e : v)
-			e = 0;
-
-	sf::RenderWindow window(sf::VideoMode(SCR_S, SCR_S), "Conway", sf::Style::Titlebar | sf::Style::Close);
+	Game conway;
 	
-	window.setVerticalSyncEnabled(true);
-
-	while (window.isOpen())
-	{
-		sf::Event event;
-		while (window.pollEvent(event))
-		{
-			switch (event.type)
-			{
-				case sf::Event::Closed:
-					window.close();
-					break;
-				case sf::Event::MouseButtonPressed: 
-					interactWithCell(sf::Mouse::getPosition(window), event);
-					break;
-				case sf::Event::KeyPressed:
-					if (event.key.code == sf::Keyboard::Space)
-						applyingRules();
-					break;
-				default:
-					break;
-			}
-		}
-
-		sf::RectangleShape square(sf::Vector2f(SCR_S / GRID_S, SCR_S / GRID_S));
-		vector<sf::RectangleShape> squares;
-
-		for (int i = 0; i < GRID_S; i++)
-		{
-			for (int j = 0; j < GRID_S; j++)
-			{
-				if (grid[i][j] == 1)
-					square.setFillColor(sf::Color(255, 255, 255));
-				else
-					square.setFillColor(sf::Color(0, 0, 0));
-
-				square.setPosition(sf::Vector2f((square.getSize().x * i), (square.getSize().y * j)));
-				squares.push_back(square);
-			}
-		}
-
-		window.clear(sf::Color(72, 72, 72));
-			
-		for (auto it = squares.begin(); it != squares.end(); it++)
-		{
-			window.draw(*it);
-		}
-
-
-		window.display();
-	}
+	conway.init();
+	conway.run();
 
 	return 0;
 }
 
+// Depois ambas funções devem ser remodeladas para a classe Game
+/* 
 void interactWithCell(sf::Vector2i mouse_position, sf::Event mouse_event)
 {
 	float cell_size = SCR_S / GRID_S;
@@ -147,4 +83,5 @@ void applyingRules()
 	}
 	std::copy(&next_grid[0][0], &next_grid[0][0] + (GRID_S * GRID_S), &grid[0][0]);
 }
+*/
 
