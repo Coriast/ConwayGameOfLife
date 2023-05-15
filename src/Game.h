@@ -6,6 +6,26 @@
 #include "ResourceManager.h"
 #include "Shader.h"
 
+struct Entity
+{
+	bool alive;
+
+	GLfloat vertices[12] = {
+		// positions
+		0.5f,  0.5f, 0.0f,
+		0.5f, -0.5f, 0.0f,
+		-0.5f, -0.5f, 0.0f,
+		-0.5f,  0.5f, 0.0f
+	};
+
+	GLuint indices[6] = {
+		0, 1, 3,
+		1, 2, 3
+	};
+
+	// transformation matrices ????
+};
+
 class Game
 {
 public:
@@ -16,8 +36,10 @@ public:
 	void run();
 
 private:
+	static const int grid_size = 8;
 	sf::Window window;
-	bool grid[8][8]; // tamanho definido de 8 por 8 para ver melhor, depois aumenta
+	sf::Clock clock;
+	Entity entities[grid_size][grid_size]; // tamanho definido de 8 por 8 para ver melhor, depois aumenta
 
 	void processInput();
 	void update();
