@@ -9,34 +9,22 @@
 struct Entity
 {
 	bool alive;
-
-	GLfloat vertices[12] = {
-		// positions
-		0.5f,  0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		-0.5f, -0.5f, 0.0f,
-		-0.5f,  0.5f, 0.0f
-	};
-
-	GLuint indices[6] = {
-		0, 1, 3,
-		1, 2, 3
-	};
-
-	// transformation matrices ????
+	glm::mat4 model = glm::mat4(1.0f);
 };
 
 class Game
 {
 public:
-	Game();
+	Game(int win_width, int win_height);
 
 	void init();
 
 	void run();
 
 private:
-	static const int grid_size = 8;
+	glm::mat4 projection, view;
+	int win_width, win_height;
+	static const int grid_size = 10;
 	sf::Window window;
 	sf::Clock clock;
 	Entity entities[grid_size][grid_size]; // tamanho definido de 8 por 8 para ver melhor, depois aumenta

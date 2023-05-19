@@ -2,7 +2,7 @@
 
 int main()
 {
-	Game conway;
+	Game conway(800, 800);
 	
 	conway.init();
 	conway.run();
