@@ -47,20 +47,18 @@ void Game::init()
 
 	ResourceManager::LoadShader("data\\shaders\\basic_V.glsl", "data\\shaders\\basic_F.glsl", "basicShader");
 
-	projection = glm::ortho(0.0f, (float)win_width, 0.0f, (float)win_height, 0.1f, 100.0f);
-	view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+	projection = glm::perspective(glm::radians(45.0f), (float)win_width / (float)win_height, 0.1f, 100.0f);
 
 	Shader shader = ResourceManager::GetShader("basicShader");
 	shader.SetMatrix4("projection", projection, true);
-	shader.SetMatrix4("view", view, true);
+	shader.SetMatrix4("view", UCam.getView(), true);
 
 	for (int i = 0; i < grid_size; i++)
 	{
 		for (int j = 0; j < grid_size; j++)
 		{
-			float cell_width = (float)win_width / (float)grid_size, cell_height = (float)win_height / (float)grid_size;
-			glm::mat4 scale = glm::scale(entities[i][j].model, glm::vec3(cell_width-1.f, cell_height-1.f, 1.0f));
-			glm::mat4 translate = glm::translate(entities[i][j].model, glm::vec3((cell_width * i) + (cell_width/2.0f), (cell_height * j) + (cell_height/2.0f), 0.0f));
+			glm::mat4 scale = glm::scale(entities[i][j].model, glm::vec3(entities[i][j].scale, entities[i][j].scale, 1.0f));
+			glm::mat4 translate = glm::translate(entities[i][j].model, glm::vec3((entities[i][j].scale * i), (entities[i][j].scale * j), 0.0f));
 			entities[i][j].model = translate * scale;
 		}
 	}
@@ -96,14 +94,6 @@ void Game::processInput()
 			win_height = event.size.height;
 			glViewport(0, 0, win_width, win_height);
 			break;
-			/*
-		case sf::Event::MouseButtonPressed:
-			interactWithCell(sf::Mouse::getPosition(window), event);
-			break;
-		case sf::Event::KeyPressed:
-			if (event.key.code == sf::Keyboard::Space)
-				applyingRules();
-				*/
 		default:
 			break;
 		}
@@ -112,16 +102,16 @@ void Game::processInput()
 
 void Game::update()
 {
+	Shader shader = ResourceManager::GetShader("basicShader");
+	shader.SetMatrix4("projection", projection, true);
 
-	projection = glm::ortho(0.0f, (float)win_width, 0.0f, (float)win_height, 0.1f, 100.0f);
+	projection = glm::perspective(glm::radians(90.0f), (float)win_width / (float)win_height, 0.1f, 100.0f);
 }
 
 void Game::render()
 {
 	Shader shader = ResourceManager::GetShader("basicShader");
-
 	shader.Use();
-	shader.SetMatrix4("projection", projection);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -150,6 +140,7 @@ void Game::render()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	// Enviando o index referente ao { layout (location = 0) }
 	glEnableVertexAttribArray(0);
+
 
 	glBindVertexArray(VAO);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

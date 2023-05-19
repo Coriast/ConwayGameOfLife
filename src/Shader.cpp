@@ -70,7 +70,7 @@ void Shader::SetVector4f(const char* name, glm::vec4& value, bool useShader)
 	glUniform4f(glGetUniformLocation(this->ID, name), value.x, value.y, value.z, value.w);
 }
 
-void Shader::SetMatrix4(const char* name, glm::mat4& matrix, bool useShader)
+void Shader::SetMatrix4(const char* name, glm::mat4 matrix, bool useShader)
 {
 	if (useShader)
 		this->Use();

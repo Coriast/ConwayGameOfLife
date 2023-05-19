@@ -5,11 +5,13 @@
     <ClCompile Include="src\ResourceManager.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\UglyCam.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ResourceManager.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\Game.h" />
+    <ClInclude Include="src\UglyCam.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\basic_V.glsl" />
