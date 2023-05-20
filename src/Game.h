@@ -31,6 +31,7 @@ private:
 	sf::Clock clock;
 	Entity entities[grid_size][grid_size]; // tamanho definido de 8 por 8 para ver melhor, depois aumenta
 	UglyCam UCam;
+	sf::Vector2i mousePos, mousePosStart;
 
 	void processInput();
 	void update();

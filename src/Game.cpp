@@ -47,11 +47,6 @@ void Game::init()
 
 	ResourceManager::LoadShader("data\\shaders\\basic_V.glsl", "data\\shaders\\basic_F.glsl", "basicShader");
 
-	projection = glm::perspective(glm::radians(45.0f), (float)win_width / (float)win_height, 0.1f, 100.0f);
-
-	Shader shader = ResourceManager::GetShader("basicShader");
-	shader.SetMatrix4("projection", projection, true);
-	shader.SetMatrix4("view", UCam.getView(), true);
 
 	for (int i = 0; i < grid_size; i++)
 	{
@@ -94,18 +89,52 @@ void Game::processInput()
 			win_height = event.size.height;
 			glViewport(0, 0, win_width, win_height);
 			break;
+		case sf::Event::MouseWheelScrolled:
+				UCam.cameraPos += (event.mouseWheelScroll.delta * 0.5f) * UCam.cameraFront;
+			break;
+		/*
+			Todo esse modelo de arrastar com o mouse vai ter que mudar
+			e muito ainda, talvez eu consiga pensar no futuro em como realmente prender o 
+			cursor do mouse no grid e conseguir mover a câmera por uma velocidade fixa
+			para trazer a ilusão de que está realmente arrastando o grid para os lados
+			por enquanto fica desse jeito errado para facilitar a visualização
+		*/
+		case sf::Event::MouseButtonPressed:
+			if (event.mouseButton.button == sf::Mouse::Right)
+				mousePosStart = sf::Vector2i(event.mouseButton.x, event.mouseButton.y);
+			break;
+		case sf::Event::MouseMoved:
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+			{
+				mousePos = sf::Mouse::getPosition(window);
+				float difference = (mousePos.x - mousePosStart.x) % 10;
+				std::cout << difference << std::endl;
+				if (mousePos.x < mousePosStart.x)
+				{
+					UCam.cameraPos += glm::normalize(glm::cross(UCam.cameraFront, UCam.cameraUp)) * (0.05f * -difference);
+				}
+				else if (mousePos.x > mousePosStart.x)
+				{
+					UCam.cameraPos -= glm::normalize(glm::cross(UCam.cameraFront, UCam.cameraUp)) * (0.05f * difference);
+				}
+				mousePosStart = mousePos;
+			}
+			break;
 		default:
 			break;
 		}
 	}
+
+	
 }
 
 void Game::update()
 {
+	projection = glm::perspective(glm::radians(45.0f), (float)win_width / (float)win_height, 0.1f, 100.0f);
+
 	Shader shader = ResourceManager::GetShader("basicShader");
 	shader.SetMatrix4("projection", projection, true);
-
-	projection = glm::perspective(glm::radians(90.0f), (float)win_width / (float)win_height, 0.1f, 100.0f);
+	shader.SetMatrix4("view", UCam.getView(), true);
 }
 
 void Game::render()
