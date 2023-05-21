@@ -123,15 +123,20 @@ void Game::processInput()
 
 				CalcMouse = glm::inverse(UCam.getView()) * CalcMouse;
 				
-				mouseClick = glm::normalize(glm::vec3(CalcMouse.x, CalcMouse.y, CalcMouse.z));
+				mouseClick = (glm::normalize(glm::vec3(CalcMouse.x, CalcMouse.y, CalcMouse.z)) * 0.1f);
 
 				glm::vec3 rayCast = UCam.cameraPos;
-				for (int i = 0; i < UCam.cameraPos.z; i++)
+				int count = 0;
+				while(rayCast.z > 0)
 				{
 					rayCast += mouseClick;
+					count++;
 				}
+
 				mouseClick = rayCast;
 				checkMouseClick = true;
+				std::cout << "[UCam.cameraPos.z] = " << UCam.cameraPos.z << std::endl;
+				std::cout << "[rayCast.z] = " << count << std::endl;
 			}
 			break;
 		case sf::Event::MouseButtonReleased:
