@@ -95,9 +95,12 @@ void Game::processInput()
 		/*
 			Todo esse modelo de arrastar com o mouse vai ter que mudar
 			e muito ainda, talvez eu consiga pensar no futuro em como realmente prender o 
-			cursor do mouse no grid e conseguir mover a c‚mera por uma velocidade fixa
-			para trazer a ilus„o de que est· realmente arrastando o grid para os lados
-			por enquanto fica desse jeito errado para facilitar a visualizaÁ„o
+			cursor do mouse no grid e conseguir mover a c√¢mera por uma velocidade fixa
+			para trazer a ilus√£o de que est√° realmente arrastando o grid para os lados
+			por enquanto fica desse jeito errado para facilitar a visualiza√ß√£o
+			
+			ou talvez seja melhor aplicar a transforma√ß√£o em uma matrix e aplic√°-la as c√©lulas antes de 
+			desenhar, movendo assim o grid mesmo.
 		*/
 		case sf::Event::MouseButtonPressed:
 			if (event.mouseButton.button == sf::Mouse::Right)
@@ -214,7 +217,7 @@ void Game::render()
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
 
-	// criando um Buffer de memÛria
+	// criando um Buffer de mem√≥ria
 	GLuint VBO; // Vertex Buffer Object 
 	glGenBuffers(1, &VBO);
 
