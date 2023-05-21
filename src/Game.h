@@ -10,7 +10,7 @@
 struct Entity
 {
 	bool alive;
-	float scale = 1;
+	float size = 1;
 	glm::mat4 model = glm::mat4(1.0f);
 };
 
@@ -24,14 +24,17 @@ public:
 	void run();
 
 private:
-	glm::mat4 projection, view;
-	int win_width, win_height;
-	static const int grid_size = 10;
-	sf::Window window;
-	sf::Clock clock;
-	Entity entities[grid_size][grid_size]; // tamanho definido de 8 por 8 para ver melhor, depois aumenta
-	UglyCam UCam;
-	sf::Vector2i mousePos, mousePosStart;
+	float				deltaTime, lastFrame = 0.0f;
+	glm::mat4			projection;
+	int					win_width, win_height;
+	static const int	grid_size = 10;
+	sf::Window			window;
+	sf::Clock			clock;
+	Entity				entities[grid_size][grid_size]; // tamanho definido de 8 por 8 para ver melhor, depois aumenta
+	UglyCam				UCam;
+	sf::Vector2i		mousePos, mousePosStart;
+	glm::vec3			mouseClick;
+	bool				rightMousePressed = false, checkMouseClick = false;
 
 	void processInput();
 	void update();

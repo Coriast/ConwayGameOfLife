@@ -22,10 +22,7 @@ Game::Game(int win_width, int win_height)
 	{
 		for (size_t j = 0; j < grid_size; j++)
 		{
-			if(i % 2 == 0)
-				entities[i][j].alive = 0;
-			else 
-				entities[i][j].alive = 1;
+			entities[i][j].alive = 0;
 		}
 	}
 }
@@ -52,9 +49,8 @@ void Game::init()
 	{
 		for (int j = 0; j < grid_size; j++)
 		{
-			glm::mat4 scale = glm::scale(entities[i][j].model, glm::vec3(entities[i][j].scale, entities[i][j].scale, 1.0f));
-			glm::mat4 translate = glm::translate(entities[i][j].model, glm::vec3((entities[i][j].scale * i), (entities[i][j].scale * j), 0.0f));
-			entities[i][j].model = translate * scale;
+			glm::mat4 translate = glm::translate(entities[i][j].model, glm::vec3((entities[i][j].size * i), (entities[i][j].size * j), 0.0f));
+			entities[i][j].model = translate;
 		}
 	}
 	
@@ -64,6 +60,10 @@ void Game::run()
 {
 	while (window.isOpen())
 	{
+		float currentFrame = clock.getElapsedTime().asSeconds();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
 		processInput();
 
 		update();
@@ -90,7 +90,7 @@ void Game::processInput()
 			glViewport(0, 0, win_width, win_height);
 			break;
 		case sf::Event::MouseWheelScrolled:
-				UCam.cameraPos += (event.mouseWheelScroll.delta * 0.5f) * UCam.cameraFront;
+				UCam.cameraPos += UCam.cameraFront * (event.mouseWheelScroll.delta * (UCam.cameraPos.z * 2.0f)) * deltaTime;
 			break;
 		/*
 			Todo esse modelo de arrastar com o mouse vai ter que mudar
@@ -101,22 +101,66 @@ void Game::processInput()
 		*/
 		case sf::Event::MouseButtonPressed:
 			if (event.mouseButton.button == sf::Mouse::Right)
-				mousePosStart = sf::Vector2i(event.mouseButton.x, event.mouseButton.y);
+			{
+				mousePosStart = sf::Mouse::getPosition(window);
+				rightMousePressed = true;
+			}
+			if (event.mouseButton.button == sf::Mouse::Left)
+			{
+				// coordenadas em Screen Space
+				glm::vec4 CalcMouse = glm::vec4(event.mouseButton.x, event.mouseButton.y, -1.0f, 1.0f);
+
+				// Transformadas para Clip Space [-1, 1]
+				CalcMouse.x = (2.0f * CalcMouse.x) / win_width - 1.0f;
+				CalcMouse.y = 1.0f - (2.0f * CalcMouse.y) / win_height;
+
+				CalcMouse = glm::inverse(projection) * CalcMouse;
+
+				CalcMouse = glm::vec4(CalcMouse.x, CalcMouse.y, -1.0f, 0.0f);
+
+				CalcMouse = glm::inverse(UCam.getView()) * CalcMouse;
+				
+				mouseClick = glm::normalize(glm::vec3(CalcMouse.x, CalcMouse.y, CalcMouse.z));
+
+				glm::vec3 rayCast = UCam.cameraPos;
+				for (int i = 0; i < UCam.cameraPos.z; i++)
+				{
+					rayCast += mouseClick;
+				}
+				mouseClick = rayCast;
+				checkMouseClick = true;
+			}
+			break;
+		case sf::Event::MouseButtonReleased:
+			if (event.mouseButton.button == sf::Mouse::Right)
+				rightMousePressed = false;
 			break;
 		case sf::Event::MouseMoved:
-			if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && rightMousePressed)
 			{
 				mousePos = sf::Mouse::getPosition(window);
-				float difference = (mousePos.x - mousePosStart.x) % 10;
-				std::cout << difference << std::endl;
+				sf::Vector2i cameraVelocity = (mousePos - mousePosStart);
+				//std::cout << cameraVelocity.x << "|" << cameraVelocity.y << std::endl;
+
+				glm::vec3 cameraRight = glm::normalize(glm::cross(UCam.cameraFront, UCam.cameraUp));
 				if (mousePos.x < mousePosStart.x)
 				{
-					UCam.cameraPos += glm::normalize(glm::cross(UCam.cameraFront, UCam.cameraUp)) * (0.05f * -difference);
+					UCam.cameraPos += cameraRight * (-cameraVelocity.x * deltaTime);
 				}
 				else if (mousePos.x > mousePosStart.x)
 				{
-					UCam.cameraPos -= glm::normalize(glm::cross(UCam.cameraFront, UCam.cameraUp)) * (0.05f * difference);
+					UCam.cameraPos -= cameraRight * (cameraVelocity.x * deltaTime);
 				}
+
+				if (mousePos.y < mousePosStart.y)
+				{
+					UCam.cameraPos += glm::normalize(glm::cross(UCam.cameraFront, cameraRight)) * (-cameraVelocity.y * deltaTime);
+				}
+				else if (mousePos.y > mousePosStart.y)
+				{
+					UCam.cameraPos -= glm::normalize(glm::cross(UCam.cameraFront, cameraRight)) * (cameraVelocity.y * deltaTime);
+				}
+
 				mousePosStart = mousePos;
 			}
 			break;
@@ -135,6 +179,28 @@ void Game::update()
 	Shader shader = ResourceManager::GetShader("basicShader");
 	shader.SetMatrix4("projection", projection, true);
 	shader.SetMatrix4("view", UCam.getView(), true);
+	
+	if (checkMouseClick)
+	{
+		for (int i = 0; i < grid_size; i++)
+		{
+			for (int j = 0; j < grid_size; j++)
+			{
+				glm::vec3 cellBottom = entities[i][j].model * glm::vec4(-0.5f, -0.5f, 0.0f, 1.0f);
+				glm::vec3 cellTop = entities[i][j].model * glm::vec4(0.5f, 0.5f, 0.0f, 1.0f);
+
+				if (mouseClick.x > cellBottom.x && mouseClick.x < cellTop.x)
+				{
+					if (mouseClick.y > cellBottom.y && mouseClick.y < cellTop.y)
+					{
+						entities[i][j].alive = !entities[i][j].alive;
+					}
+				}
+			}
+		}
+		checkMouseClick = false;
+	}
+	
 }
 
 void Game::render()
@@ -179,9 +245,9 @@ void Game::render()
 		{
 			glm::vec3 entity_color;
 			if (!entities[i][j].alive)
-				entity_color = { 128.0f / 255.0f, 85.0f / 255.0f, 140.0f / 255.0f };
+				entity_color = { 33.0f / 255.0f, 42.0f / 255.0f, 62.0f / 255.0f };
 			else
-				entity_color = { 203.0f / 255.0f, 160.0f / 255.0f, 174.0f / 255.0f };
+				entity_color = { 241.0f / 255.0f, 246.0f / 255.0f, 249.0f / 255.0f };
 			shader.SetVector3f("entityColor", entity_color);
 			shader.SetMatrix4("model", entities[i][j].model);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
