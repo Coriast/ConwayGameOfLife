@@ -123,20 +123,21 @@ void Game::processInput()
 
 				CalcMouse = glm::inverse(UCam.getView()) * CalcMouse;
 				
-				mouseClick = (glm::normalize(glm::vec3(CalcMouse.x, CalcMouse.y, CalcMouse.z)) * 0.1f);
+				mouseClick = (glm::normalize(glm::vec3(CalcMouse.x, CalcMouse.y, CalcMouse.z)));
 
-				glm::vec3 rayCast = UCam.cameraPos;
-				int count = 0;
-				while(rayCast.z > 0)
-				{
-					rayCast += mouseClick;
-					count++;
-				}
-
+				// Matemática daqui -> https://antongerdelan.net/opengl/raycasting.html
+				// Neste caso já sei antecipadamente que quero testar o rayCast no Z = 0
+				glm::vec3 O		= UCam.cameraPos;
+				glm::vec3 D		= mouseClick;
+				glm::vec3 n		= glm::vec3(0.0f, 0.0f, 1.0f);
+				float d			= 0; // mantendo variável para caso for usar em outros casos
+				// Queremos checar no plano 0, utilizando apenas a distância do 
+				// nosso ponto de origem até a normal do nosso plano em Z = 0
+				float t = -((O * n + d) / (mouseClick * n)).z;
+				glm::vec3 rayCast = O + D * t;
+				
 				mouseClick = rayCast;
 				checkMouseClick = true;
-				std::cout << "[UCam.cameraPos.z] = " << UCam.cameraPos.z << std::endl;
-				std::cout << "[rayCast.z] = " << count << std::endl;
 			}
 			break;
 		case sf::Event::MouseButtonReleased:
