@@ -42,8 +42,8 @@ void Game::init()
 
 	glViewport(0, 0, win_width, win_height);
 
-	ResourceManager::LoadShader("data\\shaders\\basic_V.glsl", "data\\shaders\\basic_F.glsl", "basicShader");
-
+	ResourceManager::LoadShader("./data/shaders/basic_V.glsl", "./data/shaders/basic_F.glsl", "basicShader"); 
+	// "data\\shaders\\basic_V.glsl", "data\\shaders\\basic_F.glsl"
 
 	for (int i = 0; i < grid_size; i++)
 	{
