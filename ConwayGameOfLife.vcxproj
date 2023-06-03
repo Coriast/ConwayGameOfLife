@@ -26,6 +26,7 @@
     <ClCompile Include="src\UglyCam.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Enum.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\ResourceManager.h" />
@@ -118,6 +119,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\vcpkg\installed\x86-windows\lib;C:\SFML-2.5.1\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glad.lib;opengl32.lib;winmm.lib;gdi32.lib;sfml-graphics-s-d.lib;sfml-window-s-d.lib;sfml-system-s-d.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <StackReserveSize>4194304</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -157,6 +159,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\vcpkg\installed\x86-windows\lib;C:\SFML-2.5.1\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glad.lib;opengl32.lib;winmm.lib;gdi32.lib;sfml-graphics-s-d.lib;sfml-window-s-d.lib;sfml-system-s-d.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <StackReserveSize>4194304</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

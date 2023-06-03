@@ -12,17 +12,6 @@ int main()
 
 // Depois ambas funções devem ser remodeladas para a classe Game
 /* 
-void interactWithCell(sf::Vector2i mouse_position, sf::Event mouse_event)
-{
-	float cell_size = SCR_S / GRID_S;
-	int cell_x = mouse_position.x / cell_size;
-	int cell_y = mouse_position.y / cell_size;
-
-	if (mouse_event.mouseButton.button == sf::Mouse::Left)
-		grid[cell_x][cell_y] = 1;
-	else if (mouse_event.mouseButton.button == sf::Mouse::Right)
-		grid[cell_x][cell_y] = 0;
-}
 
 void applyingRules()
 {

@@ -12,6 +12,7 @@
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\UglyCam.h" />
+    <ClInclude Include="src\Enum.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\basic_V.glsl" />

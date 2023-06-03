@@ -1,14 +1,14 @@
 #include "ResourceManager.h"
 
-std::map<std::string, Shader>	ResourceManager::shaders;
+std::map<SHADER, Shader>	ResourceManager::shaders;
 
-Shader ResourceManager::LoadShader(const char* vShaderFile, const char* fShaderFile, std::string name)
+Shader ResourceManager::LoadShader(const char* vShaderFile, const char* fShaderFile, SHADER name)
 {
 	shaders[name] = LoadShaderFromFile(vShaderFile, fShaderFile);
 	return shaders[name];
 }
 
-Shader ResourceManager::GetShader(std::string name)
+Shader ResourceManager::GetShader(SHADER name)
 {
 	return shaders[name];
 }
