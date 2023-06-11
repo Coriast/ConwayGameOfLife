@@ -1,3 +1,8 @@
+/*
+* Tenho que pensar nas células como parte 
+* de uma malha única e não elementos individuais
+*/
+
 #include "Game.h"
 
 GLfloat vertices[12] = {
@@ -18,12 +23,16 @@ Game::Game(int win_width, int win_height)
 	this->win_width = win_width;
 	this->win_height = win_height;
 
-	for (size_t i = 0; i < grid_size; i++)
+	for (size_t i = 0; i < grid_width; i++)
 	{
-		for (size_t j = 0; j < grid_size; j++)
+		std::vector<Entity> entity_line;
+		for (size_t j = 0; j < grid_height; j++)
 		{
-			entities[i][j].alive = 0;
+			Entity entity;
+			entity.alive = 0;
+			entity_line.push_back(entity);
 		}
+		entities.push_back(entity_line);
 	}
 }
 
@@ -43,17 +52,84 @@ void Game::init()
 	glViewport(0, 0, win_width, win_height);
 
 	ResourceManager::LoadShader("./data/shaders/basic_V.glsl", "./data/shaders/basic_F.glsl", SHADER::basic); 
+	Shader shader = ResourceManager::GetShader(SHADER::basic);
 
-	for (int i = 0; i < grid_size; i++)
+	int k = 0;
+	for (int i = 0; i < grid_width; i++)
 	{
-		for (int j = 0; j < grid_size; j++)
+		for (int j = 0; j < grid_height; j++)
 		{
+			glm::vec3 vert1, vert2, vert3, vert4;
 			glm::mat4 translate = glm::translate(entities[i][j].model, glm::vec3((entities[i][j].size * i), (entities[i][j].size * j), 0.0f));
 			entities[i][j].model = translate;
+			entities[i][j].bottom = entities[i][j].model * glm::vec4(-0.5f, -0.5f, 0.0f, 1.0f);
+			entities[i][j].top = entities[i][j].model * glm::vec4(0.5f, 0.5f, 0.0f, 1.0f);
+			completeGrid.push_back(translate * glm::vec4(vertices[0], vertices[1], vertices[2], 1.0f));
+			completeGrid.push_back(translate * glm::vec4(vertices[3], vertices[4], vertices[5], 1.0f));
+			completeGrid.push_back(translate * glm::vec4(vertices[6], vertices[7], vertices[8], 1.0f));
+			completeGrid.push_back(translate * glm::vec4(vertices[9], vertices[10], vertices[11], 1.0f));
+			
+			indicesGrid.push_back(indices[0] + k);
+			indicesGrid.push_back(indices[1] + k);
+			indicesGrid.push_back(indices[2] + k);
+			indicesGrid.push_back(indices[3] + k);
+			indicesGrid.push_back(indices[4] + k);
+			indicesGrid.push_back(indices[5] + k);
+			k += 4;
 		}
 	}
 	
 	actual_state = PROGRAM_STATE::idle;
+
+	// Inicialização dos dados para renderizar
+	GLuint completeGridVBO, completeGridEBO;
+
+	glGenVertexArrays(1, &completeGridVAO);
+	glBindVertexArray(completeGridVAO);
+
+	// criando um Buffer de memória
+	glGenBuffers(1, &completeGridVBO);
+	glGenBuffers(1, &completeGridEBO);
+
+	//=========================================//
+	// Linkando este ID para um Buffer do tipo GL_ARRAY_BUFFER
+	glBindBuffer(GL_ARRAY_BUFFER, completeGridVBO);
+	// Copiando os dados do nosso Array para o Buffer
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * completeGrid.size(), &(completeGrid[0].x), GL_STATIC_DRAW);
+
+	// Bind Indices
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, completeGridEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indicesGrid.size(), &indicesGrid[0], GL_STATIC_DRAW);
+
+	glBindVertexArray(completeGridVAO);
+	// Configurando como vai ser a leitura dos dados salvos no buffer
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// Enviando o index referente ao { layout (location = 0) }
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+	
+	//=====================================//
+	GLuint singleCellVBO, singleCellEBO;
+
+	glGenVertexArrays(1, &singleCellVAO);
+	glBindVertexArray(singleCellVAO);
+
+	glGenBuffers(1, &singleCellVBO);
+	glGenBuffers(1, &singleCellEBO);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, singleCellVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, singleCellEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void Game::run()
@@ -62,7 +138,7 @@ void Game::run()
 	{
 		if (tick >= 0.10f)
 			tick = 0.0f;
-
+			
 		processInput();
 
 		update();
@@ -73,6 +149,13 @@ void Game::run()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		tick += deltaTime;
+		frameRateTick += deltaTime;
+
+		if (frameRateTick >= 1.0f)
+		{
+			frameRateTick = 0.0f;
+			std::cout << "FrameRate: " << 1.0f / deltaTime << std::endl;
+		}
 	}
 }
 
@@ -97,7 +180,7 @@ void Game::processInput()
 			break;
 			/*
 				Todo esse modelo de arrastar com o mouse vai ter que mudar
-				e muito ainda, talvez eu consiga pensar no futuro em como realmente prender o
+				talvez eu consiga pensar no futuro em como realmente prender o
 				cursor do mouse no grid e conseguir mover a câmera por uma velocidade fixa
 				para trazer a ilusão de que está realmente arrastando o grid para os lados
 				por enquanto fica desse jeito errado para facilitar a visualização
@@ -118,10 +201,10 @@ void Game::processInput()
 				rightMousePressed = false;
 			break;
 		case sf::Event::MouseMoved:
-
+		{
 			processMouseMove(event.mouseMove.x, event.mouseMove.y);
 
-			if (rightMousePressed) // sf::Mouse::isButtonPressed(sf::Mouse::Right) 
+			if (rightMousePressed)
 			{
 				mousePos = sf::Mouse::getPosition(window);
 				sf::Vector2i cameraVelocity = (mousePos - mousePosStart);
@@ -148,6 +231,7 @@ void Game::processInput()
 				mousePosStart = mousePos;
 			}
 			break;
+		}
 		case sf::Event::KeyPressed:
 			if (event.key.code == sf::Keyboard::A)
 				actual_state = PROGRAM_STATE::active;
@@ -172,14 +256,11 @@ void Game::update()
 
 	if (actual_state == PROGRAM_STATE::idle)
 	{
-		for (int i = 0; i < grid_size; i++)
+		for (int i = 0; i < grid_width; i++)
 		{
-			for (int j = 0; j < grid_size; j++)
+			for (int j = 0; j < grid_height; j++)
 			{
-				glm::vec3 cellBottom = entities[i][j].model * glm::vec4(-0.5f, -0.5f, 0.0f, 1.0f);
-				glm::vec3 cellTop = entities[i][j].model * glm::vec4(0.5f, 0.5f, 0.0f, 1.0f);
-
-				if (mouseClick.x > cellBottom.x && mouseClick.x < cellTop.x /*Horizontal*/ && /*Vertical*/ mouseClick.y > cellBottom.y && mouseClick.y < cellTop.y)
+				if (mouseClick.x > entities[i][j].bottom.x && mouseClick.x < entities[i][j].top.x /*Horizontal*/ && /*Vertical*/ mouseClick.y > entities[i][j].bottom.y && mouseClick.y < entities[i][j].top.y)
 				{
 					if (checkMouseClick)
 					{
@@ -187,7 +268,7 @@ void Game::update()
 						checkMouseClick = false;
 					}
 						
-					if(!entities[i][j].mouseHover)
+					if (!entities[i][j].mouseHover)
 						entities[i][j].mouseHover = true;
 				}
 				else
@@ -196,7 +277,6 @@ void Game::update()
 				}
 			}
 		}
-		
 	}
 	else if (actual_state == PROGRAM_STATE::active)
 	{
@@ -213,74 +293,50 @@ void Game::render()
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-
-	// criando um Buffer de memória
-	GLuint VBO; // Vertex Buffer Object 
-	glGenBuffers(1, &VBO);
-
-	GLuint EBO;
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO);
-	// Linkando este ID para um Buffer do tipo GL_ARRAY_BUFFER
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// Copiando os dados do nosso Array para o Buffer
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// Bind Indices
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	// Configurando como vai ser a leitura dos dados salvos no buffer
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	// Enviando o index referente ao { layout (location = 0) }
-	glEnableVertexAttribArray(0);
-
-
-	glBindVertexArray(VAO);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	for (int i = 0; i < grid_size; i++)
+
+	glBindVertexArray(completeGridVAO);
+	glm::vec3 deadColor = glm::vec3(33.0f / 255.0f, 42.0f / 255.0f, 62.0f / 255.0f);
+	shader.SetVector3f("entityColor", deadColor);
+	shader.SetMatrix4("model", glm::mat4(1.0f));
+	glDrawElements(GL_TRIANGLES, indicesGrid.size(), GL_UNSIGNED_INT, 0); // 
+
+	
+	glBindVertexArray(singleCellVAO);
+	for (int i = 0; i < grid_width; i++)
 	{
-		for (int j = 0; j < grid_size; j++)
+		for (int j = 0; j < grid_height; j++)
 		{
+			if (!entities[i][j].alive && !entities[i][j].mouseHover)
+				continue;
+
 			if (!entities[i][j].alive && entities[i][j].mouseHover)
 				entities[i][j].color = { 57.0f / 255.0f, 72.0f / 255.0f, 103.0f / 255.0f };
 			else if (entities[i][j].alive)
-				entities[i][j].color = {241.0f / 255.0f, 246.0f / 255.0f, 249.0f / 255.0f};
-			else if (!entities[i][j].alive)
-				entities[i][j].color = { 33.0f / 255.0f, 42.0f / 255.0f, 62.0f / 255.0f };
+				entities[i][j].color = { 241.0f / 255.0f, 246.0f / 255.0f, 249.0f / 255.0f };
 
 			shader.SetVector3f("entityColor", entities[i][j].color);
 			shader.SetMatrix4("model", entities[i][j].model);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			
 		}
-	
-	}	
+	}
+
 	glBindVertexArray(0);
 
-	window.display();
+	window.display();	
 }
 
 void Game::updateTickOfGrid()
 {
-	Entity entitiesNextTick[grid_size][grid_size];
+	std::vector<std::vector<Entity>> entitiesNextTick;
 	
-	for (int i = 0; i < grid_size; i++)
-	{
-		for (int j = 0; j < grid_size; j++)
-		{
-			entitiesNextTick[i][j].alive = entities[i][j].alive;
-		}
-	}
+	entitiesNextTick = entities;
 
-	for (int i = 0; i < grid_size; i++)
+	for (int i = 0; i < grid_width; i++)
 	{
-		for (int j = 0; j < grid_size; j++)
+		for (int j = 0; j < grid_height; j++)
 		{
-			if (i == 0 || j == 0 || i == (grid_size-1) || j == (grid_size-1))
+			if (i == 0 || j == 0 || i == (grid_width-1) || j == (grid_height-1))
 			{
 				entitiesNextTick[i][j].alive = 0;
 				continue;
@@ -310,13 +366,7 @@ void Game::updateTickOfGrid()
 		}
 	}
 
-	for (int i = 0; i < grid_size; i++)
-	{
-		for (int j = 0; j < grid_size; j++)
-		{
-			entities[i][j].alive = entitiesNextTick[i][j].alive;
-		}
-	}
+	entities = entitiesNextTick;
 }
 
 void Game::processMouseMove(float x, float y)
@@ -349,5 +399,5 @@ void Game::processMouseMove(float x, float y)
 
 	mouseClick = rayCast;
 
-	std::cout << mouseClick.x << " \ " << mouseClick.y << " \ " << mouseClick.z << std::endl;
+	//std::cout << mouseClick.x << " \ " << mouseClick.y << " \ " << mouseClick.z << std::endl;
 }
