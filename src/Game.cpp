@@ -1,6 +1,6 @@
 /*
-* Tenho que pensar nas células como parte 
-* de uma malha única e não elementos individuais
+* Revisar Grid -> https://stackoverflow.com/questions/1482394/another-game-of-life-question-infinite-grid
+* -> https://en.wikipedia.org/wiki/Hashlife
 */
 
 #include "Game.h"
