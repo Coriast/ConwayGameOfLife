@@ -6,6 +6,7 @@
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\UglyCam.cpp" />
+    <ClCompile Include="src\Entity.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ResourceManager.h" />
@@ -13,6 +14,7 @@
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\UglyCam.h" />
     <ClInclude Include="src\Enum.h" />
+    <ClInclude Include="src\Entity.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\basic_V.glsl" />
