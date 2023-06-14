@@ -1,12 +1,26 @@
 #include "Entity.h"
 
+Entity::Entity() {}
+
+Entity::Entity(glm::vec3 coordenates, glm::vec3 color)
+{
+	setCoord(coordenates);
+	setColor(color);
+}
+
 void Entity::init()
 {
+	/*
+	* Atualmente meu VAO é por objeto de Entity só que 
+	* como são os mesmos dados eu posso de alguma forma
+	* só utilizar o mesmo VAO para todas as chamadas de Draw que eu faço
+	* Depois eu altero isso
+	*/
 	GLfloat vertices[12] = {
-		1.0f,  1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f,
-		0.0f,  1.0f, 0.0f
+		0.5f,  0.5f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		-0.5f, -0.5f, 0.0f,
+		-0.5f,  0.5f, 0.0f
 	};
 
 	GLuint indices[6] = {
@@ -35,24 +49,25 @@ void Entity::init()
 	glBindVertexArray(0);
 }
 
-void Entity::draw(glm::vec3 translate, glm::vec3 color, Shader shader)
+void Entity::draw(Shader shader)
 {
-
-	if (translate.x < 0)
-		translate.x -= 1;
-
-	if (translate.y < 0)
-		translate.y -= 1;
-
-	std::modf(translate.x, &translate.x);
-	std::modf(translate.y, &translate.y);
-
 	shader.Use();
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), translate);
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(coord.x, coord.y, 0.0f));
 	shader.SetMatrix4("model", model, true);
 	shader.SetVector3f("entityColor", color, true);
 
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
+}
+
+void Entity::setCoord(glm::vec3 coordenates)
+{
+	coord.x = std::round(coordenates.x);
+	coord.y = std::round(coordenates.y);
+}
+
+void Entity::setColor(glm::vec3 color)
+{
+	this->color = color;
 }

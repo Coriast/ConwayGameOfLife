@@ -1,11 +1,12 @@
 /*
-* Revisar Grid -> https://stackoverflow.com/questions/1482394/another-game-of-life-question-infinite-grid
-* -> https://en.wikipedia.org/wiki/Hashlife
+* Material de Referência {
+* -> https://www.gathering4gardner.org/g4g13gift/math/RokickiTomas-GiftExchange-LifeAlgorithms-G4G13.pdf
+* -> https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
 */
 
 #include "Game.h"
 
-static struct Color
+struct Color
 {
 	glm::vec3 mouseHover = { 57.0f / 255.0f, 72.0f / 255.0f, 103.0f / 255.0f };
 	glm::vec3 deadCell = { 33.0f / 255.0f, 42.0f / 255.0f, 62.0f / 255.0f };
@@ -38,7 +39,8 @@ void Game::init()
 	ResourceManager::LoadShader("./data/shaders/basic_V.glsl", "./data/shaders/basic_F.glsl", SHADER::basic); 
 	Shader shader = ResourceManager::GetShader(SHADER::basic);
 
-	entity.init();
+	mouseHoveringEntity.setColor(colors.mouseHover);
+	mouseHoveringEntity.init();
 	
 	actual_state = PROGRAM_STATE::idle;
 }
@@ -161,7 +163,21 @@ void Game::update()
 
 	if (actual_state == PROGRAM_STATE::idle)
 	{
+		if (checkMouseClick)
+		{
+			Entity entity(mouseClick, colors.liveCell);
 
+			bool inserted = entities.insert(std::pair<std::pair<int, int>, Entity>(std::pair<int, int>(entity.coord.x, entity.coord.y), entity)).second;
+
+			if (!inserted)
+				entities.erase(std::pair<int, int>(entity.coord.x, entity.coord.y));
+			else
+				entities.find(std::pair<int, int>(entity.coord.x, entity.coord.y))->second.init();
+			
+
+			checkMouseClick = false;
+			std::cout << " container size:" << entities.size() << std::endl;
+		}
 	}
 	else if (actual_state == PROGRAM_STATE::active)
 	{
@@ -180,9 +196,16 @@ void Game::render()
 	glClearColor(33.0f / 255.0f, 42.0f / 255.0f, 62.0f / 255.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	if(actual_state == PROGRAM_STATE::idle)
-		entity.draw(mouseClick, colors.mouseHover, ResourceManager::GetShader(SHADER::basic));
-
+	if (actual_state == PROGRAM_STATE::idle)
+	{
+		mouseHoveringEntity.setCoord(mouseClick);
+		mouseHoveringEntity.draw(ResourceManager::GetShader(SHADER::basic));
+	}
+	
+	std::map<std::pair<int, int>, Entity>::iterator it;
+	for (it = entities.begin(); it != entities.end(); it++)
+		it->second.draw(ResourceManager::GetShader(SHADER::basic));
+		
 	glBindVertexArray(0);
 	window.display();	
 }
@@ -217,5 +240,5 @@ void Game::processMouseMove(float x, float y)
 
 	mouseClick = rayCast;
 
-	std::cout << mouseClick.x << " \ " << mouseClick.y << " \ " << mouseClick.z << std::endl;
+	//std::cout << mouseClick.x << " \ " << mouseClick.y << " \ " << mouseClick.z << std::endl;
 }

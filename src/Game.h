@@ -31,7 +31,8 @@ private:
 	bool				rightMousePressed = false, checkMouseClick = false;
 	PROGRAM_STATE		actual_state;
 
-	Entity entity;
+	Entity mouseHoveringEntity;
+	std::map<std::pair<int, int>, Entity> entities;
 
 	void processInput();
 	void update();
