@@ -27,12 +27,20 @@
     <ClCompile Include="src\UglyCam.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\Enum.h" />
     <ClInclude Include="src\Game.h" />
+    <ClInclude Include="src\Icon.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\ResourceManager.h" />
     <ClInclude Include="src\UglyCam.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ConwayGameOfLife.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\Desktop\Conway.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

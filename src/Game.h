@@ -1,14 +1,17 @@
 #pragma once
 #include <glad/glad.h>
 #include <SFML/Window.hpp>
+#include <SFML/Graphics/Image.hpp>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <iomanip>
+#include <fstream>
 #include "Enum.h"
 #include "ResourceManager.h"
 #include "Shader.h"
 #include "UglyCam.h"
 #include "Entity.h"
+#include "Icon.h"
 
 class Game
 {

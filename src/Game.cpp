@@ -34,6 +34,28 @@ void Game::init()
 	window.setVerticalSyncEnabled(true);
 	window.setActive(true);
 
+
+	sf::Image image;
+	image.create(Icon::x, Icon::y, Icon::pixels);
+
+	window.setIcon(image.getSize().x, image.getSize().y, image.getPixelsPtr());
+
+	/*
+	
+	ofstream teste("teste.txt");
+
+	for (unsigned int i = 0; i < image.getSize().x; i++)
+	{
+		for (unsigned int j = 0; j < image.getSize().y; j++)
+		{
+			sf::Color cor = image.getPixel(i, j);
+			teste << (int)cor.r << ", " << (int)cor.g << ", " << (int)cor.b << ", " << (int)cor.a << ",";
+			teste << "\n";
+		}
+	}
+	teste.close();
+	*/
+
 	gladLoadGLLoader((GLADloadproc)sf::Context::getFunction);
 
 	glViewport(0, 0, win_width, win_height);
