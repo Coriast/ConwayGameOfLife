@@ -34,10 +34,6 @@
     <ClInclude Include="src\ResourceManager.h" />
     <ClInclude Include="src\UglyCam.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="data\shaders\basic_F.glsl" />
-    <None Include="data\shaders\basic_V.glsl" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

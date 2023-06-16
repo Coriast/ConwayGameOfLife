@@ -6,6 +6,8 @@
 
 #include "Game.h"
 
+using namespace std;
+
 struct Color
 {
 	glm::vec3 mouseHover = { 57.0f / 255.0f, 72.0f / 255.0f, 103.0f / 255.0f };
@@ -36,7 +38,7 @@ void Game::init()
 
 	glViewport(0, 0, win_width, win_height);
 
-	ResourceManager::LoadShader("./data/shaders/basic_V.glsl", "./data/shaders/basic_F.glsl", SHADER::basic); 
+	ResourceManager::LoadShader(SHADER::basic); 
 	Shader shader = ResourceManager::GetShader(SHADER::basic);
 
 	mouseHoveringEntity.setColor(colors.mouseHover);
@@ -95,10 +97,10 @@ void Game::run()
 		tick += deltaTime;
 		frameRateTick += deltaTime;
 
-		if (frameRateTick >= 1.0f)
+		if (frameRateTick >= 5.0f)
 		{
 			frameRateTick = 0.0f;
-			std::cout << "FrameRate: " << 1.0f / deltaTime << std::endl;
+			cout << "FrameRate: " << 1.0f / deltaTime << endl;
 		}
 	}
 }
@@ -148,23 +150,10 @@ void Game::processInput()
 				sf::Vector2i cameraVelocity = (mousePos - mousePosStart);
 
 				glm::vec3 cameraRight = glm::normalize(glm::cross(UCam.cameraFront, UCam.cameraUp));
-				if (mousePos.x < mousePosStart.x)
-				{
-					UCam.cameraPos += cameraRight * (-cameraVelocity.x * deltaTime);
-				}
-				else if (mousePos.x > mousePosStart.x)
-				{
-					UCam.cameraPos -= cameraRight * (cameraVelocity.x * deltaTime);
-				}
 
-				if (mousePos.y < mousePosStart.y)
-				{
-					UCam.cameraPos += glm::normalize(glm::cross(UCam.cameraFront, cameraRight)) * (-cameraVelocity.y * deltaTime);
-				}
-				else if (mousePos.y > mousePosStart.y)
-				{
-					UCam.cameraPos -= glm::normalize(glm::cross(UCam.cameraFront, cameraRight)) * (cameraVelocity.y * deltaTime);
-				}
+				UCam.cameraPos -= cameraRight * (cameraVelocity.x * deltaTime);
+
+				UCam.cameraPos += UCam.cameraUp * (cameraVelocity.y * deltaTime);
 
 				mousePosStart = mousePos;
 			}
@@ -198,7 +187,7 @@ void Game::update()
 		{
 			Entity entity(mouseClick, colors.liveCell);
 
-			bool inserted = entities.insert(std::make_pair(entity.coord, entity)).second;
+			bool inserted = entities.insert(make_pair(entity.coord, entity)).second;
 
 			if (!inserted)
 				entities.erase(entity.coord);
@@ -208,11 +197,10 @@ void Game::update()
 	}
 	else if (actual_state == PROGRAM_STATE::active)
 	{
-		//if (tick == 0.0f)
-		//{
+		if (tick == 0.0f)
+		{
 			updateGeneration(&shader);
-			std::cout << " container size:" << entities.size() << std::endl;
-		//}
+		}
 	}
 }
 
@@ -230,7 +218,7 @@ void Game::render()
 		mouseHoveringEntity.draw(VAO, &shader);
 	}
 	
-	std::map<std::pair<int, int>, Entity>::iterator it;
+	map<pair<int, int>, Entity>::iterator it;
 	for (it = entities.begin(); it != entities.end(); it++)
 		it->second.draw(VAO, &shader);
 		
@@ -267,38 +255,36 @@ void Game::processMouseMove(float x, float y)
 	glm::vec3 rayCast = O + D * t;
 
 	mouseClick = rayCast;
-
-	//std::cout << mouseClick.x << " \ " << mouseClick.y << " \ " << mouseClick.z << std::endl;
 }
 
 void Game::updateGeneration(Shader *shader)
 {
-	std::map<std::pair<int, int>, Entity> nextGeneration;
+	map<pair<int, int>, Entity> nextGeneration;
 
-	std::map<std::pair<int, int>, int> neighbours;
+	map<pair<int, int>, int> neighbours;
 
 	// Rodeando pelas células vivas, marcando +1 para cada um de seus vizinhos
-	for (std::map<std::pair<int, int>, Entity>::iterator entity = entities.begin(); entity != entities.end(); entity++)
+	for (map<pair<int, int>, Entity>::iterator entity = entities.begin(); entity != entities.end(); entity++)
 	{
-		std::pair<int, int> coord = entity->first;
-		neighbours[std::pair<int, int>(coord.first - 1, coord.second - 1)] ++;
-		neighbours[std::pair<int, int>(coord.first - 1, coord.second)] ++;
-		neighbours[std::pair<int, int>(coord.first - 1, coord.second + 1)] ++;
-		neighbours[std::pair<int, int>(coord.first, coord.second - 1)] ++;
-		neighbours[std::pair<int, int>(coord.first, coord.second + 1)] ++;
-		neighbours[std::pair<int, int>(coord.first + 1, coord.second - 1)] ++;
-		neighbours[std::pair<int, int>(coord.first + 1, coord.second)] ++;
-		neighbours[std::pair<int, int>(coord.first + 1, coord.second + 1)] ++;
+		pair<int, int> coord = entity->first;
+		neighbours[pair<int, int>(coord.first - 1, coord.second - 1)] ++;
+		neighbours[pair<int, int>(coord.first - 1, coord.second)] ++;
+		neighbours[pair<int, int>(coord.first - 1, coord.second + 1)] ++;
+		neighbours[pair<int, int>(coord.first, coord.second - 1)] ++;
+		neighbours[pair<int, int>(coord.first, coord.second + 1)] ++;
+		neighbours[pair<int, int>(coord.first + 1, coord.second - 1)] ++;
+		neighbours[pair<int, int>(coord.first + 1, coord.second)] ++;
+		neighbours[pair<int, int>(coord.first + 1, coord.second + 1)] ++;
 	}
 
 	// Se este vizinho tiver exatamente 3 células vivas a sua volta ele volta a vida
 	// ou se ele tiver dois vizinhos porém este Neighbour já for uma célula viva, então ele continua vivo
-	for (std::map<std::pair<int, int>, int>::iterator neighbour = neighbours.begin(); neighbour != neighbours.end(); neighbour++)
+	for (map<pair<int, int>, int>::iterator neighbour = neighbours.begin(); neighbour != neighbours.end(); neighbour++)
 	{
 		if (neighbour->second == 3 || (neighbour->second == 2 && entities.find(neighbour->first) != entities.end()))
 		{
 			Entity entity(glm::vec3(neighbour->first.first, neighbour->first.second, 0.0f), colors.liveCell);
-			nextGeneration.insert(std::make_pair(neighbour->first, entity));
+			nextGeneration.insert(make_pair(neighbour->first, entity));
 		}
 	}
 	entities = nextGeneration;

@@ -16,8 +16,4 @@
     <ClInclude Include="src\Enum.h" />
     <ClInclude Include="src\Entity.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="data\shaders\basic_V.glsl" />
-    <None Include="data\shaders\basic_F.glsl" />
-  </ItemGroup>
 </Project>
