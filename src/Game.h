@@ -34,10 +34,13 @@ private:
 	Entity mouseHoveringEntity;
 	std::map<std::pair<int, int>, Entity> entities;
 
+	GLuint VAO;
+
 	void processInput();
 	void update();
 	void render();
 
 	void processMouseMove(float x, float y);
+	void updateGeneration(Shader *shader);
 };
 

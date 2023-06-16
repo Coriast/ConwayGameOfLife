@@ -1,5 +1,5 @@
 /*
-* Material de Referência {
+* Material de Referência
 * -> https://www.gathering4gardner.org/g4g13gift/math/RokickiTomas-GiftExchange-LifeAlgorithms-G4G13.pdf
 * -> https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
 */
@@ -40,9 +40,40 @@ void Game::init()
 	Shader shader = ResourceManager::GetShader(SHADER::basic);
 
 	mouseHoveringEntity.setColor(colors.mouseHover);
-	mouseHoveringEntity.init();
 	
 	actual_state = PROGRAM_STATE::idle;
+
+	GLfloat vertices[12] = {
+		0.5f,  0.5f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		-0.5f, -0.5f, 0.0f,
+		-0.5f,  0.5f, 0.0f
+	};
+
+	GLuint indices[6] = {
+		0, 1, 3,
+		1, 2, 3
+	};
+
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	GLuint VBO, EBO;
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(0);
 }
 
 void Game::run()
@@ -67,7 +98,7 @@ void Game::run()
 		if (frameRateTick >= 1.0f)
 		{
 			frameRateTick = 0.0f;
-			//std::cout << "FrameRate: " << 1.0f / deltaTime << std::endl;
+			std::cout << "FrameRate: " << 1.0f / deltaTime << std::endl;
 		}
 	}
 }
@@ -167,24 +198,21 @@ void Game::update()
 		{
 			Entity entity(mouseClick, colors.liveCell);
 
-			bool inserted = entities.insert(std::pair<std::pair<int, int>, Entity>(std::pair<int, int>(entity.coord.x, entity.coord.y), entity)).second;
+			bool inserted = entities.insert(std::make_pair(entity.coord, entity)).second;
 
 			if (!inserted)
-				entities.erase(std::pair<int, int>(entity.coord.x, entity.coord.y));
-			else
-				entities.find(std::pair<int, int>(entity.coord.x, entity.coord.y))->second.init();
-			
+				entities.erase(entity.coord);
 
 			checkMouseClick = false;
-			std::cout << " container size:" << entities.size() << std::endl;
 		}
 	}
 	else if (actual_state == PROGRAM_STATE::active)
 	{
-		if (tick == 0.0f)
-		{
-
-		}
+		//if (tick == 0.0f)
+		//{
+			updateGeneration(&shader);
+			std::cout << " container size:" << entities.size() << std::endl;
+		//}
 	}
 }
 
@@ -199,12 +227,12 @@ void Game::render()
 	if (actual_state == PROGRAM_STATE::idle)
 	{
 		mouseHoveringEntity.setCoord(mouseClick);
-		mouseHoveringEntity.draw(ResourceManager::GetShader(SHADER::basic));
+		mouseHoveringEntity.draw(VAO, &shader);
 	}
 	
 	std::map<std::pair<int, int>, Entity>::iterator it;
 	for (it = entities.begin(); it != entities.end(); it++)
-		it->second.draw(ResourceManager::GetShader(SHADER::basic));
+		it->second.draw(VAO, &shader);
 		
 	glBindVertexArray(0);
 	window.display();	
@@ -241,4 +269,37 @@ void Game::processMouseMove(float x, float y)
 	mouseClick = rayCast;
 
 	//std::cout << mouseClick.x << " \ " << mouseClick.y << " \ " << mouseClick.z << std::endl;
+}
+
+void Game::updateGeneration(Shader *shader)
+{
+	std::map<std::pair<int, int>, Entity> nextGeneration;
+
+	std::map<std::pair<int, int>, int> neighbours;
+
+	// Rodeando pelas células vivas, marcando +1 para cada um de seus vizinhos
+	for (std::map<std::pair<int, int>, Entity>::iterator entity = entities.begin(); entity != entities.end(); entity++)
+	{
+		std::pair<int, int> coord = entity->first;
+		neighbours[std::pair<int, int>(coord.first - 1, coord.second - 1)] ++;
+		neighbours[std::pair<int, int>(coord.first - 1, coord.second)] ++;
+		neighbours[std::pair<int, int>(coord.first - 1, coord.second + 1)] ++;
+		neighbours[std::pair<int, int>(coord.first, coord.second - 1)] ++;
+		neighbours[std::pair<int, int>(coord.first, coord.second + 1)] ++;
+		neighbours[std::pair<int, int>(coord.first + 1, coord.second - 1)] ++;
+		neighbours[std::pair<int, int>(coord.first + 1, coord.second)] ++;
+		neighbours[std::pair<int, int>(coord.first + 1, coord.second + 1)] ++;
+	}
+
+	// Se este vizinho tiver exatamente 3 células vivas a sua volta ele volta a vida
+	// ou se ele tiver dois vizinhos porém este Neighbour já for uma célula viva, então ele continua vivo
+	for (std::map<std::pair<int, int>, int>::iterator neighbour = neighbours.begin(); neighbour != neighbours.end(); neighbour++)
+	{
+		if (neighbour->second == 3 || (neighbour->second == 2 && entities.find(neighbour->first) != entities.end()))
+		{
+			Entity entity(glm::vec3(neighbour->first.first, neighbour->first.second, 0.0f), colors.liveCell);
+			nextGeneration.insert(std::make_pair(neighbour->first, entity));
+		}
+	}
+	entities = nextGeneration;
 }
